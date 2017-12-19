@@ -1,0 +1,17 @@
+version: '2'
+
+networks:
+  bench:
+
+services:
+  database:
+    image: bench
+    environment:
+      PG_LOG_MIN_MESSAGES: 'info'
+      PG_LOG_MIN_DURATION_STATEMENT: '0'
+    cpuset: '0,1,2,3,4,5,6,7'
+    mem_limit: 512M
+    networks:
+      - bench
+    ports:
+      - '20000:5432'

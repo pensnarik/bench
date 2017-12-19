@@ -1,0 +1,1 @@
+SELECT extract(epoch FROM benchmark(%(count)s))
