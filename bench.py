@@ -83,10 +83,13 @@ class App():
         self.execute_scripts_in_dir('cleanup')
 
     def run_test(self, i, count):
-        logging.info('Starting thread %s, %s function calls' % (i, count))
         conn = psycopg2.connect(self.args.db)
 
         cursor = conn.cursor()
+
+        cursor.execute('select pg_backend_pid()')
+        pid = cursor.fetchone()[0]
+        logging.info('Starting thread %s, %s function calls, PID: %s' % (i, count, pid))
 
         query = open(os.path.join(self.dir, 'test.sql'), 'r').read()
         cursor.execute(query % {'count': count})
