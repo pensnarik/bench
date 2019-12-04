@@ -17,9 +17,12 @@ class App():
     def __init__(self):
         parser = argparse.ArgumentParser(description='PostgreSQL benchmark')
         parser.add_argument('--db', type=str, required=True)
+        # --threads has str type because it's possible to provide
+        # a number of values, like '1,2,4,8,16'
         parser.add_argument('--threads', type=str, default='1')
         parser.add_argument('--count', type=int, default=100000)
         parser.add_argument('--test', type=str, required=True)
+        parser.add_argument('--no-cleanup', action='store_true', default=False)
         self.args = parser.parse_args()
         self.dir = os.path.join('./tests/', self.args.test)
 
@@ -96,11 +99,12 @@ class App():
 
         result = cursor.fetchone()
         result_in_ms = (result[0]/count)*1000.0
-        logging.info('RESULT: %.4f ms, %d TPS' % (round(result_in_ms, 4), 1/(result[0]/count)))
+        logging.info('RESULT: %.4f ms, %d TPS, total %.4f s' % (round(result_in_ms, 4), 1/(result[0]/count), result[0]))
         mutex.acquire()
         self.benchmark_results.append(result_in_ms)
         mutex.release()
 
+        conn.commit()
         conn.close()
 
     def run_tests(self, threads_count):
@@ -125,7 +129,8 @@ class App():
         for threads_count in self.args.threads.split(','):
             self.run_tests(int(threads_count))
 
-        self.cleanup_database()
+        if not self.args.no_cleanup:
+            self.cleanup_database()
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
